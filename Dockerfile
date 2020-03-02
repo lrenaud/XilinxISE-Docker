@@ -1,6 +1,6 @@
 FROM centos:6
 
-MAINTAINER Zoltán Berkes <zoltan.berkes.1@gmail.com>
+MAINTAINER Luke Renaud <luke@dabblee.com>
 
 RUN yum -y install \
     compat-libstdc++-33 \
@@ -10,7 +10,7 @@ RUN yum -y install \
     patch \
 && yum clean all
 
-RUN curl -o /usr/local/bin/gosu -sSL "https://github.com/tianon/gosu/releases/download/1.6/gosu-$(arch | sed s/x86_64/amd64/ --)" \
+RUN curl -o /usr/local/bin/gosu -sSL "https://github.com/tianon/gosu/releases/download/1.11/gosu-$(arch | sed s/x86_64/amd64/ --)" \
 && chmod +x /usr/local/bin/gosu
 
 COPY content README.md /

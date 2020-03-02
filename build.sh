@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t zberkes/xilinx-ise-centos6 .
+docker build -t lrenaud/xilinx-ise-centos6 .

@@ -2,6 +2,7 @@
 set -e
 
 SCRIPTDIR=$(dirname $(readlink -f "$0"))
+CONTAINER_NAME="xilinx-docker"
 
 ##
 ## Process arguments
@@ -13,6 +14,10 @@ while [ 1 ]; do
       "--shell" | "-s")
           shift
           RUN_IN_SHELL="YES"
+          ;;
+      "--attach" | "-a")
+          shift
+          ATTACH_USER="YES"
           ;;
       "--config" | "-c")
           shift
@@ -106,16 +111,30 @@ fi
 ##
 ## Run docker
 ##
-docker run "${DOCKER_OPTIONS[@]}" \
-       -e DISPLAY=$DISPLAY \
-       --net=host \
-       -v $HOME/.Xauthority:/home/developer/.Xauthority:ro \
-       -v "${WORKSPACE}":/home/workspace \
-       ${DOCKER_IMAGE} \
-       --uid "$(id -u)" \
-       --user "$(id -u -n)" \
-       --gid "$(id -g)" \
-       --group "$(id -g -n)" \
-       --create-user \
-       --version "${XILINX_ISE_VERSION}" \
-       "${CMD[@]}"
+if [[ -n $ATTACH_USER ]]; then
+	docker exec -i -t --user 1000 "${CONTAINER_NAME}" \
+		/bin/bash
+else
+	for DEV in $(ls /dev/digilent*); do
+		DEVICES_LIST+=" --device=$DEV:$DEV:rw"
+	done
+	echo "$DEVICES_LIST"
+	docker run "${DOCKER_OPTIONS[@]}" \
+		-e DISPLAY=$DISPLAY \
+		--rm \
+		--net=host \
+		--name="${CONTAINER_NAME}" \
+		-v $HOME/.Xauthority:/home/developer/.Xauthority:ro \
+		-v $HOME/.Xauthority:/home/developer/.Xauthority:ro \
+		-v "${WORKSPACE}":/home/workspace \
+		-v $HOME/.local/share/fonts:/home/workspace/.fonts:ro \
+		$DEVICES_LIST \
+		${DOCKER_IMAGE} \
+		--uid "$(id -u)" \
+		--user "$(id -u -n)" \
+		--gid "$(id -g)" \
+		--group "$(id -g -n)" \
+		--create-user \
+		--version "${XILINX_ISE_VERSION}" \
+		"${CMD[@]}"
+fi
